@@ -1,7 +1,13 @@
 import * as fs from "fs/promises";
+
+import {
+  PROGRAM_COMMENT,
+  PROGRAM_VARIABLE,
+  PROGRAM_VARIABLE_EXPRESSION,
+} from "./constants";
+import { ProgramContext, ProgramLine, ProgramLineType } from "./program";
 import {
   INSTRUCTION_OPERANDS_TYPES,
-  Instruction,
   InstructionType,
 } from "../instructions/instructions";
 import {
@@ -9,7 +15,6 @@ import {
   constructProgramMemory,
   parseOperand,
 } from ".";
-import { PROGRAM_COMMENT, PROGRAM_MAX_INSTRUCTIONS } from "./constants";
 
 /**
  * Function for filtering unwanted lines from the program.
@@ -24,23 +29,74 @@ const filterProgramInstructions = (program: string): string[] => {
 };
 
 /**
- * Function for parsing the raw program instructions into instructions.
- * @param rawInstructions Raw program instructions.
- * @returns Instructions array.
+ * Function for parsing the raw program lines.
+ * @param lines Program lines.
+ * @returns Program lines parsed.
  */
-const parseProgramInstructions = (rawInstructions: string[]): Instruction[] => {
-  return rawInstructions.map((instruction) => {
-    const [op, operandStr] = instruction.split(" ");
-    const type = op as InstructionType;
-    const operandType = INSTRUCTION_OPERANDS_TYPES[type];
+const parseProgramLines = (lines: string[]): ProgramLine[] => {
+  return lines.map((line) => {
+    let type: ProgramLineType;
+    const isVariableDeclaration = line.startsWith(PROGRAM_VARIABLE);
+    if (isVariableDeclaration) {
+      type = "variable";
+    } else {
+      type = "instruction";
+    }
+    return {
+      type,
+      content: line,
+    };
+  });
+};
+
+const linesProcessingFunctions: Record<
+  ProgramLineType,
+  (line: ProgramLine, context: ProgramContext) => void
+> = {
+  variable: (line, context) => {
+    const { type, content } = line;
+    let [name, value] = content.split(" ");
+    name = name.slice(1);
+
+    const isValidVariableName = PROGRAM_VARIABLE_EXPRESSION.test(name);
+    if (!isValidVariableName) {
+      throw new Error(`Variable with name: ${name} is not valid!`);
+    }
+
+    context.variables[name] = value;
+  },
+  instruction: (line, context) => {
+    const { type, content } = line;
+    const [instruction, operand] = content.split(" ");
+
+    const instructionType = instruction as InstructionType;
+    const operandType = INSTRUCTION_OPERANDS_TYPES[instructionType];
     if (!operandType) {
       throw new Error(`Invalid operation type: ${type}`);
     }
-    const operand = operandStr
-      ? parseOperand(operandStr, operandType)
-      : undefined;
-    return { type, operand };
+
+    let parsedOperand = undefined;
+    if (operandType !== "none" && operand) {
+      const operandIsVariable = operand in context.variables;
+      parsedOperand = parseOperand(
+        operandIsVariable ? context.variables[operand] : operand,
+        operandType
+      );
+    }
+
+    context.instructions.push({
+      type: instructionType,
+      operand: parsedOperand,
+    });
+  },
+};
+
+const generateProgramContext = (lines: ProgramLine[]): ProgramContext => {
+  const context: ProgramContext = { variables: {}, instructions: [] };
+  lines.forEach((line) => {
+    return linesProcessingFunctions[line.type](line, context);
   });
+  return context;
 };
 
 /**
@@ -55,9 +111,13 @@ export const parseProgramFile = async (
 ) => {
   const buffer = await fs.readFile(programFilePath);
   const rawProgramInstructions = filterProgramInstructions(buffer.toString());
-  const instructions = parseProgramInstructions(rawProgramInstructions);
+  const parsedLines = parseProgramLines(rawProgramInstructions);
 
-  const programMemory = constructProgramMemory(instructions, addressValues);
+  const programContext = generateProgramContext(parsedLines);
+  const programMemory = constructProgramMemory(
+    programContext.instructions,
+    addressValues
+  );
   const compiledMemory = compileProgramMemoryToString(programMemory);
 
   const nonEmptyInstructions = Object.entries(programMemory).reduce(

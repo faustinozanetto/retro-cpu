@@ -10,7 +10,10 @@ import { HLT_STEP_2 } from "./definitions/hlt-instruction";
 import { INCX_STEP_2, INCX_STEP_3 } from "./definitions/incx-instruction";
 import { INCY_STEP_2, INCY_STEP_3 } from "./definitions/incy-instruction";
 import { INCZ_STEP_2, INCZ_STEP_3 } from "./definitions/incz-instruction";
+import { JMC_STEP_2 } from "./definitions/jmc-instruction";
+import { JME_STEP_2 } from "./definitions/jme-instruction";
 import { JMP_STEP_2 } from "./definitions/jmp-instruction";
+import { JMZ_STEP_2 } from "./definitions/jmz-instruction";
 import { LDIX_STEP_2 } from "./definitions/ldix-instruction";
 import { LDIY_STEP_2 } from "./definitions/ldiy-instruction";
 import { LDIZ_STEP_2 } from "./definitions/ldiz-instruction";
@@ -36,6 +39,9 @@ export const OPERATION_TYPES = [
   "ADD",
   "SUB",
   "JMP",
+  "JMZ",
+  "JMC",
+  "JME",
   "HLT",
 ] as const;
 export type InstructionType = (typeof OPERATION_TYPES)[number];
@@ -82,6 +88,9 @@ export const INSTRUCTION_DESCRIPTIONS = [
   INCZ_STEP_2,
   INCZ_STEP_3,
   JMP_STEP_2,
+  JMC_STEP_2,
+  JMZ_STEP_2,
+  JME_STEP_2,
   HLT_STEP_2,
 ];
 
@@ -101,5 +110,8 @@ export const INSTRUCTION_OPERANDS_TYPES: Record<
   ADD: "address",
   SUB: "address",
   JMP: "jmp-address",
+  JMC: "jmp-address",
+  JME: "jmp-address",
+  JMZ: "jmp-address",
   HLT: "none",
 };

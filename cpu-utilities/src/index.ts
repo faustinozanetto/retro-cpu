@@ -6,8 +6,8 @@ const main = async () => {
 
   const program = "programs/test.asm";
   const compiledProgram = await parseProgramFile(program, {
-    7: 50,
-    8: 50,
+    7: 25,
+    8: 45,
   });
   console.log(
     "========================================================================"

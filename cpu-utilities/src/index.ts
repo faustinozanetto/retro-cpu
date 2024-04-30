@@ -1,26 +1,17 @@
+import { printProgramDebug } from "./program-generator/debug-progam";
 import { parseProgramFile } from "./program-generator/parse-program-file";
 import { writeRomFile } from "./rom-writer/write-wrom-file";
 
 const main = async () => {
   await writeRomFile("out/rom-file.txt");
 
-  const program = "programs/test.asm";
-  const compiledProgram = await parseProgramFile(program, {
+  const programFilePath = "programs/test.asm";
+  const programResult = await parseProgramFile(programFilePath, {
     7: 25,
     8: 45,
   });
-  console.log(
-    "========================================================================"
-  );
 
-  console.log("Compiled Program Details:");
-  console.log(" - Program File Path: " + program);
-  console.log(` - Memory Usage: ${compiledProgram.memoryUsage * 100}%`);
-  console.log(` - Output: ${compiledProgram.compiledMemory}`);
-
-  console.log(
-    "========================================================================"
-  );
+  printProgramDebug(programResult);
 };
 
 main();

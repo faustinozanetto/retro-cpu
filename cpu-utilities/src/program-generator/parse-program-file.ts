@@ -7,7 +7,12 @@ import {
   PROGRAM_VARIABLE,
   PROGRAM_VARIABLE_EXPRESSION,
 } from "./constants";
-import { ProgramContext, ProgramLine, ProgramLineType } from "./program";
+import {
+  ProgramContext,
+  ProgramLine,
+  ProgramLineType,
+  ProgramResult,
+} from "./program";
 import {
   INSTRUCTION_OPERANDS_TYPES,
   InstructionType,
@@ -94,7 +99,6 @@ const linesProcessingFunctions: Record<
     }
 
     let parsedOperand: number | undefined = undefined;
-    // If the type is ! none and we have a valid operand, check if it is a variable and if yes, get it from the variables record.
     if (operandType !== "none" && operand) {
       const operandIsVariable = operand in context.variables;
       const operandIsLabel = operand in context.labels;
@@ -136,7 +140,9 @@ const generateProgramContext = (lines: ProgramLine[]): ProgramContext => {
 export const parseProgramFile = async (
   programFilePath: string,
   addressValues: Record<number, number>
-) => {
+): Promise<ProgramResult> => {
+  const fileName = programFilePath.split("/").slice(-1)[0];
+
   const buffer = await fs.readFile(programFilePath);
   const rawProgramInstructions = filterProgramInstructions(buffer.toString());
   const parsedLines = parseProgramLines(rawProgramInstructions);
@@ -155,5 +161,11 @@ export const parseProgramFile = async (
 
   const memoryUsage = nonEmptyInstructions / Object.keys(programMemory).length;
 
-  return { compiledMemory, memoryUsage };
+  return {
+    name: fileName,
+    memoryUsage,
+    compiled: compiledMemory,
+    labels: programContext.labels,
+    variables: programContext.variables,
+  };
 };

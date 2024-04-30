@@ -13,3 +13,10 @@ export interface ProgramContext {
   labels: Record<string, string>;
   instructions: Instruction[];
 }
+
+export interface ProgramResult
+  extends Pick<ProgramContext, "labels" | "variables"> {
+  name: string;
+  memoryUsage: number;
+  compiled: string;
+}

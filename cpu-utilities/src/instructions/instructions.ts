@@ -6,6 +6,7 @@ import {
   ADD_STEP_4,
 } from "./definitions/add-instruction";
 import { FETCH_STEP_0, FETCH_STEP_1 } from "./definitions/fetch-instruction";
+import { HLT_STEP_2 } from "./definitions/hlt-instruction";
 import { INCX_STEP_2, INCX_STEP_3 } from "./definitions/incx-instruction";
 import { INCY_STEP_2, INCY_STEP_3 } from "./definitions/incy-instruction";
 import { INCZ_STEP_2, INCZ_STEP_3 } from "./definitions/incz-instruction";
@@ -31,6 +32,7 @@ export const OPERATION_TYPES = [
   "ADD",
   "SUB",
   "JMP",
+  "HLT",
 ] as const;
 export type InstructionType = (typeof OPERATION_TYPES)[number];
 export type InstructionOperandType =
@@ -75,6 +77,7 @@ export const INSTRUCTION_DESCRIPTIONS = [
   INCY_STEP_3,
   INCZ_STEP_2,
   INCZ_STEP_3,
+  HLT_STEP_2,
 ];
 
 export const INSTRUCTION_OPERANDS_TYPES: Record<
@@ -90,4 +93,5 @@ export const INSTRUCTION_OPERANDS_TYPES: Record<
   ADD: "address",
   SUB: "address",
   JMP: "jmp-address",
+  HLT: "none",
 };

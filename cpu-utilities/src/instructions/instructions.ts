@@ -10,6 +10,7 @@ import { HLT_STEP_2 } from "./definitions/hlt-instruction";
 import { INCX_STEP_2, INCX_STEP_3 } from "./definitions/incx-instruction";
 import { INCY_STEP_2, INCY_STEP_3 } from "./definitions/incy-instruction";
 import { INCZ_STEP_2, INCZ_STEP_3 } from "./definitions/incz-instruction";
+import { JMP_STEP_2 } from "./definitions/jmp-instruction";
 import { LDIX_STEP_2 } from "./definitions/ldix-instruction";
 import { LDIY_STEP_2 } from "./definitions/ldiy-instruction";
 import { LDIZ_STEP_2 } from "./definitions/ldiz-instruction";
@@ -29,6 +30,9 @@ export const OPERATION_TYPES = [
   "LDIX",
   "LDIY",
   "LDIZ",
+  "INCX",
+  "INCY",
+  "INCZ",
   "ADD",
   "SUB",
   "JMP",
@@ -77,6 +81,7 @@ export const INSTRUCTION_DESCRIPTIONS = [
   INCY_STEP_3,
   INCZ_STEP_2,
   INCZ_STEP_3,
+  JMP_STEP_2,
   HLT_STEP_2,
 ];
 
@@ -90,6 +95,9 @@ export const INSTRUCTION_OPERANDS_TYPES: Record<
   LDIX: "value",
   LDIY: "value",
   LDIZ: "value",
+  INCX: "none",
+  INCY: "none",
+  INCZ: "none",
   ADD: "address",
   SUB: "address",
   JMP: "jmp-address",

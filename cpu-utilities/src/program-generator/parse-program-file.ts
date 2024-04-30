@@ -2,6 +2,8 @@ import * as fs from "fs/promises";
 
 import {
   PROGRAM_COMMENT,
+  PROGRAM_LABEL,
+  PROGRAM_LABEL_EXPRESSION,
   PROGRAM_VARIABLE,
   PROGRAM_VARIABLE_EXPRESSION,
 } from "./constants";
@@ -34,17 +36,22 @@ const filterProgramInstructions = (program: string): string[] => {
  * @returns Program lines parsed.
  */
 const parseProgramLines = (lines: string[]): ProgramLine[] => {
+  let lineIndex = -1;
   return lines.map((line) => {
-    let type: ProgramLineType;
     const isVariableDeclaration = line.startsWith(PROGRAM_VARIABLE);
-    if (isVariableDeclaration) {
-      type = "variable";
-    } else {
-      type = "instruction";
-    }
+    const isLabelDeclaration = line.startsWith(PROGRAM_LABEL);
+    const type: ProgramLineType = isVariableDeclaration
+      ? "variable"
+      : isLabelDeclaration
+      ? "label"
+      : "instruction";
+
+    if (type === "instruction") lineIndex++;
+
     return {
       type,
       content: line,
+      index: lineIndex,
     };
   });
 };
@@ -65,6 +72,17 @@ const linesProcessingFunctions: Record<
 
     context.variables[name] = value;
   },
+  label: (line, context) => {
+    const { type, content } = line;
+    const name = content.slice(1);
+
+    const isValidLabelName = PROGRAM_LABEL_EXPRESSION.test(name);
+    if (!isValidLabelName) {
+      throw new Error(`Label with name: ${name} is not valid!`);
+    }
+
+    context.labels[name] = (line.index + 1).toString();
+  },
   instruction: (line, context) => {
     const { type, content } = line;
     const [instruction, operand] = content.split(" ");
@@ -75,13 +93,19 @@ const linesProcessingFunctions: Record<
       throw new Error(`Invalid operation type: ${type}`);
     }
 
-    let parsedOperand = undefined;
+    let parsedOperand: number | undefined = undefined;
+    // If the type is ! none and we have a valid operand, check if it is a variable and if yes, get it from the variables record.
     if (operandType !== "none" && operand) {
       const operandIsVariable = operand in context.variables;
-      parsedOperand = parseOperand(
-        operandIsVariable ? context.variables[operand] : operand,
-        operandType
-      );
+      const operandIsLabel = operand in context.labels;
+
+      if (operandIsVariable) {
+        parsedOperand = parseOperand(context.variables[operand], operandType);
+      } else if (operandIsLabel) {
+        parsedOperand = Number.parseInt(context.labels[operand]);
+      } else {
+        parsedOperand = Number.parseInt(operand);
+      }
     }
 
     context.instructions.push({
@@ -92,7 +116,11 @@ const linesProcessingFunctions: Record<
 };
 
 const generateProgramContext = (lines: ProgramLine[]): ProgramContext => {
-  const context: ProgramContext = { variables: {}, instructions: [] };
+  const context: ProgramContext = {
+    variables: {},
+    labels: {},
+    instructions: [],
+  };
   lines.forEach((line) => {
     return linesProcessingFunctions[line.type](line, context);
   });
@@ -121,7 +149,7 @@ export const parseProgramFile = async (
   const compiledMemory = compileProgramMemoryToString(programMemory);
 
   const nonEmptyInstructions = Object.entries(programMemory).reduce(
-    (acc, [address, value]) => acc + (value !== "00" ? 1 : 0),
+    (acc, [address, value]) => acc + (value !== "0000" ? 1 : 0),
     0
   );
 
